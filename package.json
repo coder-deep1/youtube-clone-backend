@@ -1,0 +1,15 @@
+{
+  "name": "codes_war_backend",
+  "version": "1.0.0",
+  "description": "a backend with coders_war.in",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "Backend"
+  ],
+  "author": "Deepansh Gangwar",
+  "license": "ISC"
+}
