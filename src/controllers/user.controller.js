@@ -157,8 +157,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -250,9 +250,7 @@ const updatePassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(
-      new ApiResponse(200, req.user, "current user fetched user successfully")
-    );
+    .json(new ApiResponse(200, req.user, "current user fetched  successfully"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -456,41 +454,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
-const uploadVideo = asyncHandler(async (req, res) => {
-  const { description, title } = req.body;
-
-  if (!description || !title) {
-    throw new ApiError(400, "Title and Description fields are required");
-  }
-
-  const videoFileLocalPath = req.files?.video[0]?.path;
-  const thumbnailFileLocalPath = req.files?.thumbnail[0]?.path;
-
-  if (!videoFileLocalPath || !thumbnailFileLocalPath) {
-    throw new ApiError(400, "video and thumbnail are required");
-  }
-
-  const thumbnailFile = await uploadOnCloudinary(thumbnailFileLocalPath);
-  const videoFile = await uploadOnCloudinary(videoFileLocalPath);
-
-  if (!videoFile.url || !thumbnailFile.url) {
-    throw new ApiError(400, "Error while uploading video and thumbnail");
-  }
-
-  const videoUploaded = await video.create({
-    title,
-    description,
-    videoFile: videoFile.url,
-    thumbnailFile: thumbnailFile.url,
-    duration: videoFile.duration,
-    owner: req.user._id,
-  });
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, videoUploaded, "video uploaded successfully"));
-});
-
 export {
   registerUser,
   loginUser,
@@ -503,5 +466,4 @@ export {
   updateAvatar,
   getUserChannelProfile,
   getWatchHistory,
-  uploadVideo,
 };
