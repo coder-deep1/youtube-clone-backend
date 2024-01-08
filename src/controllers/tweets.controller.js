@@ -88,6 +88,7 @@ const updateTweet = asyncHandler(async (req, res) => {
   if (!updatedTweet) {
     throw new ApiError(404, "Tweet is not updated ");
   }
+
   return res.status(200).json(
     new ApiResponse(
       200,
