@@ -259,7 +259,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   if (!fullName || !email) {
     throw new ApiError(400, "All fields are required");
   }
-  const user = User.findByIdAndUpdate(
+
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -270,9 +271,37 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     { new: true }
   ).select("-password");
 
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Custom replacer function to handle circular references
+
+  const circularReplacer = () => {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return "[Circular Reference]";
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+
+  // Use a custom replacer function to handle circular references
+  const jsonString = JSON.stringify(user, circularReplacer(), 2);
+
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        JSON.parse(jsonString),
+        "Account details updated successfully"
+      )
+    );
 });
 
 const updateAvatar = asyncHandler(async (req, res) => {
