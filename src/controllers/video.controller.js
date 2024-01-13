@@ -140,6 +140,8 @@ const getVideoById = asyncHandler(async (req, res) => {
   }
 });
 
+// Update Video Tested with Postman Successfully, ✅
+
 const updateVideo = asyncHandler(async (req, res) => {
   try {
     const { videoId } = req.params;
@@ -157,7 +159,7 @@ const updateVideo = asyncHandler(async (req, res) => {
       throw new ApiError(404, `Video not found with ID: ${videoId}`);
     }
 
-    const isThumbnailDeleted = await deleteFromCloudinary(video.thumbnail);
+    const isThumbnailDeleted = await deleteFromCloudinary(video.thumbnail.url);
 
     // console.log(isThumbnailDeleted);
 

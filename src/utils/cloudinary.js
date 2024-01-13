@@ -22,33 +22,53 @@ const uploadOnCloudinary = async (localFilePath) => {
     return null;
   }
 };
-const deleteFromCloudinary = async (imageUrl) => {
-  try {
-    const parsedUrl = new URL(imageUrl);
 
-    if (parsedUrl.hostname !== "res.cloudinary.com") {
-      throw new Error("Invalid Cloudinary URL");
+/* 
+ const deleteFromCloudinary = async (resourceUrl) => {
+  if (resourceUrl) {
+    try {
+      const publicId = extractPublicIdFromUrl(resourceUrl);
+
+      const deletionResult = await cloudinary.uploader.destroy(publicId);
+
+      if (deletionResult.result !== "ok") {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
     }
-
-    const publicId = parsedUrl.pathname.split("/").slice(2).join("/");
-
-    // Check if publicId is empty
-    if (!publicId) {
-      console.log("Issue getting publicId from Cloudinary URL");
-      return null;
-    }
-
-    // const publicId = parsedUrl.pathname.split("/").pop().split(".")[0];
-
-    // if (publicId === null) {
-    //   console.log("issue to get publicId ", publicId);
-    //   return null;
-    // }
-    const result = await cloudinary.uploader.destroy(publicId);
-    return result.result;
-  } catch (error) {
-    console.log(error.message);
   }
+  return true;
+};  
+*/
+
+const deleteFromCloudinary = async (resourceUrl) => {
+  if (resourceUrl) {
+    try {
+      // Extract public ID from the Cloudinary URL
+      const publicId = extractPublicIdFromUrl(resourceUrl);
+
+      const deletionResult = await cloudinary.uploader.destroy(publicId);
+
+      if (deletionResult.result !== "ok") {
+        console.error(
+          "Failed to delete resource from Cloudinary. Deletion result:",
+          deletionResult
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting resource from Cloudinary:", error.message);
+      return false;
+    }
+  }
+
+  console.warn("No resource URL provided. Considered as successfully deleted.");
+  return true;
 };
 
 export { uploadOnCloudinary, deleteFromCloudinary };
