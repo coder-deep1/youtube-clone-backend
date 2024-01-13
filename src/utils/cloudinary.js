@@ -1,11 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-// cloudinary.config({
-//   cloud_name: "process.env.CLOUDINARY_CLOUD_NAME",
-//   api_key: "process.env.CLOUDINARY_API_KEY",
-//   api_secret: "process.env.CLOUDINARY_API_SECRET",
-// });
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -19,8 +14,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
-    // file uploaded successfully cloudinary
-    // console.log("file uploaded successfully cloudinary");
+
     fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
@@ -28,16 +22,32 @@ const uploadOnCloudinary = async (localFilePath) => {
     return null;
   }
 };
-
-const deleteFromCloudinary = async (url) => {
+const deleteFromCloudinary = async (imageUrl) => {
   try {
-    if (!url) return null;
-    const deletedResponse = await cloudinary.uploader.destroy(url, {
-      resource_type: "auto",
-    });
-    return deletedResponse;
+    const parsedUrl = new URL(imageUrl);
+
+    if (parsedUrl.hostname !== "res.cloudinary.com") {
+      throw new Error("Invalid Cloudinary URL");
+    }
+
+    const publicId = parsedUrl.pathname.split("/").slice(2).join("/");
+
+    // Check if publicId is empty
+    if (!publicId) {
+      console.log("Issue getting publicId from Cloudinary URL");
+      return null;
+    }
+
+    // const publicId = parsedUrl.pathname.split("/").pop().split(".")[0];
+
+    // if (publicId === null) {
+    //   console.log("issue to get publicId ", publicId);
+    //   return null;
+    // }
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result.result;
   } catch (error) {
-    return null;
+    console.log(error.message);
   }
 };
 
