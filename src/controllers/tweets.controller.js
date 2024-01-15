@@ -8,30 +8,24 @@ import { User } from "../models/user.model.js";
 // Create tweet method here
 
 const createTweet = asyncHandler(async (req, res) => {
-  const user = await User.findById({
-    _id: req.user?._id,
-  });
+  const { content } = req.body;
 
-  if (!user) {
-    throw new ApiError(
-      404,
-      " User not found. Please ensure the provided user ID is correct "
-    );
+  if (!content) {
+    throw new ApiError(400, " Tweet content is required ");
   }
 
   const tweet = await Tweet.create({
-    content: req.body.content,
-    owner: user._id,
+    content,
+    owner: req.user?._id,
   });
 
   if (!tweet) {
-    throw new ApiError(500, " Tweet could not be created ");
+    throw new ApiError(400, " Tweet is not created ");
   }
 
-  return res.status(201).json({
-    tweet,
-    message: " Tweet created successfully ",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tweet, " Tweet created successfully "));
 });
 
 // Get user tweets method here
@@ -39,65 +33,62 @@ const createTweet = asyncHandler(async (req, res) => {
 const getUserTweets = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
-  const user = await User.findById({
-    _id: userId,
-  });
-
-  if (!user) {
-    throw new ApiError(404, " User not found ");
+  if (!isValidObjectId(userId)) {
+    throw new ApiError(400, " Invalid user id ");
   }
 
-  const tweets = await Tweet.find({
-    owner: user?._id,
-  });
-
-  if (tweets.length === 0) {
-    throw new ApiError(404, " User has no tweets ");
-  }
+  const tweets = await Tweet.aggregate([
+    // TODO: add match stage to filter tweets by userId
+  ]);
 
   return res
     .status(200)
-    .json(
-      new ApiResponse(200, { tweets }, " User tweets retrieved successfully ")
-    );
+    .json(new ApiResponse(200, tweets, " User tweets retrieved successfully "));
 });
 
 //  Update tweet method here
 
 const updateTweet = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
+  const { content } = req.body;
 
-  const tweet = await Tweet.findOne({
-    _id: tweetId,
-  });
-
-  if (!tweet) {
-    throw new ApiError(404, " Tweet not found to update ");
+  if (!content) {
+    throw new ApiError(400, " Tweet content is required ");
   }
 
-  const updatedTweet = await Tweet.findByIdAndUpdate(
-    tweet._id,
+  if (!isValidObjectId(tweetId)) {
+    throw new ApiError(400, " Invalid tweet id ");
+  }
+
+  const tweet = await Tweet.findById(tweetId);
+
+  if (!tweet) {
+    throw new ApiError(404, "Tweet not found");
+  }
+
+  if (tweet?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, "only owner can edit  tweet");
+  }
+
+  const newTweet = await Tweet.findByIdAndUpdate(
+    tweetId,
     {
-      content: req.body.content,
+      $set: {
+        content,
+      },
     },
     {
       new: true,
     }
   );
 
-  if (!updatedTweet) {
-    throw new ApiError(404, "Tweet is not updated ");
+  if (!newTweet) {
+    throw new ApiError(400, "Tweet not updated");
   }
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        updatedTweet,
-      },
-      " Tweet updated successfully "
-    )
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newTweet, " Tweet updated successfully "));
 });
 
 // Delete tweet method here
@@ -105,13 +96,20 @@ const updateTweet = asyncHandler(async (req, res) => {
 const deleteTweet = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
 
-  const deletedTweet = await Tweet.findByIdAndDelete({
-    _id: tweetId,
-  });
-
-  if (!deletedTweet) {
-    throw new ApiError(404, " Tweet not found to delete ");
+  if (!isValidObjectId(tweetId)) {
+    throw new ApiError(400, " Invalid tweet id ");
   }
+  const tweet = await Tweet.findById(tweetId);
+
+  if (!tweet) {
+    throw new ApiError(404, "Tweet not found");
+  }
+
+  if (tweet?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, "only owner can delete  tweet");
+  }
+
+  await Tweet.findByIdAndDelete(tweetId);
 
   return res
     .status(200)

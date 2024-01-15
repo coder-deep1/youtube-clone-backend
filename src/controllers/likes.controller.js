@@ -70,35 +70,37 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   }
 });
 
-// TODO: "Toggle like on a video";
+// video like successfully tested ✅;
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
   try {
     const { videoId } = req.params;
-    const userId = req.user._id;
 
-    const video = await Video.findById(videoId);
-
-    if (!video) {
-      throw new ApiError(404, "video not found");
+    if (!isValidObjectId(videoId)) {
+      throw new ApiError(400, "Invalid videoId");
     }
 
     const existingLike = await Like.findOne({
       video: videoId,
-      likedBy: userId,
+      likedBy: req.user?._id,
     });
 
     if (existingLike) {
-      await Like.findByIdAndDelete(existingLike._id);
+      await Like.findByIdAndDelete(existingLike?._id);
+
       return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Video unlike successfully"));
-    } else {
-      const newLike = await Like.create({ video: videoId, likedBy: userId });
-      return res
-        .status(200)
-        .json(new ApiResponse(200, newLike, "Video liked successfully"));
+        .json(new ApiResponse(200, "Video unlike successfully"));
     }
+
+    await Like.create({
+      video: videoId,
+      likedBy: req.user?._id,
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Video liked successfully"));
   } catch (error) {
     return res
       .status(error.status || 500)
@@ -106,46 +108,38 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   }
 });
 
-// TODO: "Toggle like on a comment";
+// comment like successfully tested ✅;
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
   try {
     const { commentId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user?._id;
 
     if (!isValidObjectId(commentId)) {
       throw new ApiError(400, "Invalid comment ID");
     }
 
-    const comment = await Comment.findById(commentId);
-
-    if (!comment) {
-      throw new ApiError(404, "Comment not found");
-    }
-
-    const existingLike = await Like.findOneAndDelete({
+    const existingLike = await Like.findOne({
       comment: commentId,
       likedBy: userId,
     });
 
-    if (!existingLike) {
-      const newLike = await Like.create({
-        comment: commentId,
-        likedBy: userId,
-      });
-
-      if (!newLike) {
-        throw new ApiError(400, "Unable to like comment");
-      }
+    if (existingLike) {
+      await Like.findByIdAndDelete(existingLike?._id);
 
       return res
         .status(200)
-        .json(new ApiResponse(200, newLike, "Comment liked successfully"));
-    } else {
-      return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "Comment unliked successfully"));
+        .json(new ApiResponse(200, "Comment unliked successfully"));
     }
+
+    await Like.create({
+      comment: commentId,
+      likedBy: userId,
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "liked comment successfully"));
   } catch (error) {
     return res
       .status(error.status || 500)
