@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiErrors.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Tweet } from "../models/tweets.model.js";
 import { User } from "../models/user.model.js";
 
-// Create tweet method here
+// Create tweet testing successfully ✅
 
 const createTweet = asyncHandler(async (req, res) => {
   const { content } = req.body;
@@ -28,7 +28,7 @@ const createTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweet, " Tweet created successfully "));
 });
 
-// Get user tweets method here
+// Get user tweet testing successfully ✅
 
 const getUserTweets = asyncHandler(async (req, res) => {
   const { userId } = req.params;
@@ -38,7 +38,61 @@ const getUserTweets = asyncHandler(async (req, res) => {
   }
 
   const tweets = await Tweet.aggregate([
-    // TODO: add match stage to filter tweets by userId
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+        pipeline: [
+          {
+            $project: {
+              username: 1,
+              "avatar.url": 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "tweet",
+        as: "likeDetails",
+        pipeline: [
+          {
+            $project: {
+              likedBy: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        likeCount: {
+          $size: "$likeDetails",
+        },
+
+        ownerDetails: {
+          $first: "$ownerDetails",
+        },
+      },
+    },
+    {
+      $project: {
+        content: 1,
+        ownerDetails: 1,
+        createdAt: 1,
+        likeCount: 1,
+      },
+    },
   ]);
 
   return res
@@ -46,7 +100,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweets, " User tweets retrieved successfully "));
 });
 
-//  Update tweet method here
+//  Update tweet  testing successfully ✅
 
 const updateTweet = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
@@ -91,7 +145,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, newTweet, " Tweet updated successfully "));
 });
 
-// Delete tweet method here
+// Delete tweet testing successfully ✅
 
 const deleteTweet = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
@@ -113,7 +167,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(204, {}, " Tweet deleted successfully"));
+    .json(new ApiResponse(200, {}, " Tweet deleted successfully"));
 });
 
 export { createTweet, getUserTweets, updateTweet, deleteTweet };
