@@ -1,6 +1,5 @@
 # YouTube Clone Backend
 
-
 Welcome to the YouTube Clone Backend project! 🚀 This comprehensive video hosting website is built using Node.js, MongoDB, Mongoose, Express.js, JWT (JSON Web Token), Bcrypt, and Multer. The primary goal is to replicate the core functionalities of YouTube, providing users with a fully-featured video-sharing platform.
 
 👋 Hi, I'm Deepansh Gangwar, a passionate learner in the world of technology! 🚀
@@ -47,6 +46,24 @@ Welcome to the YouTube Clone Backend project! 🚀 This comprehensive video host
 
 1. Navigate to the provided API endpoints for user authentication, video uploading, and other features.
 2. Test the various functionalities to ensure proper operation.
+
+## API Documentation
+
+Explore the detailed API documentation using Postman. The documentation includes information on available endpoints, request formats, and response structures.
+
+[Postman API Documentation](https://documenter.getpostman.com/view/31311755/2s9YypF3mS)
+
+## API Publishing
+
+The YouTube Clone Backend API is now published and accessible for testing. Below, you'll find the API documentation and the link to access the published API:
+
+### Published API URL
+
+The YouTube Clone Backend API is accessible at the following URL:
+
+[https://your-youtube-clone-api-url.com](https://documenter.getpostman.com/view/31311755/2s9YypF3mS)
+
+Feel free to explore the API, test its functionalities, and integrate it into your applications. If you encounter any issues or have questions, don't hesitate to reach out.
 
 ## Contributing
 
